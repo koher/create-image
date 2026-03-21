@@ -26,7 +26,6 @@ swift run create-image "a cat sitting on a rainbow"
 | `--retry` | Max retries on image generation failure | `3` |
 | `--port`, `-p` | TCP port for runner communication | `51573` |
 | `--timeout` | Max seconds to wait for the entire operation | `120` |
-| `--keep-app` | Keep the temporary .app bundle for debugging | off |
 
 ## Examples
 
@@ -43,21 +42,17 @@ swift run create-image --limit 3 -o sunset.png "a sunset"
 
 # Generate a person using a source face image
 swift run create-image --source-image face.jpg "a person walking in the park"
-
-# Debug mode (keep temp bundle, view logs with: log show --predicate 'subsystem == "create-image"' --last 1m)
-swift run create-image --keep-app "a cat"
 ```
 
 ## How it works
 
-`ImageCreator` requires a foreground macOS app launched via Launch Services. A bare executable or `swift run` alone triggers `backgroundCreationForbidden`.
+`ImageCreator` requires a macOS process with `NSApp.setActivationPolicy(.regular)` (foreground app status). A plain CLI process triggers `backgroundCreationForbidden`.
 
-This tool works around that constraint with a two-component architecture:
+This tool works around that constraint with a two-process architecture:
 
-1. **CreateImage** (CLI launcher) -- parses arguments, builds a temporary `.app` bundle containing the GUI app, launches it via `NSWorkspace.openApplication`, and communicates over TCP to send the request and receive the result.
-2. **CreateImageRunner** (GUI app) -- a minimal SwiftUI app that starts a TCP server, receives the image generation request, runs `ImageCreator`, saves the output PNG, sends the result back, and terminates. The window is hidden immediately on launch.
-
-The temporary `.app` bundle is created in the system temporary directory and removed automatically after each run (unless `--keep-app` is specified). The runner process is also terminated via `NSRunningApplication` on cleanup.
+1. **CreateImage** (CLI) -- parses arguments and delegates to **CreateImageLauncher**.
+2. **CreateImageLauncher** (library) -- launches the **CreateImageRunner** binary as a child process via `Process`, communicates over TCP to send the request and receive the result, and terminates the runner on completion.
+3. **CreateImageRunner** (GUI app) -- a minimal SwiftUI app that activates itself as a foreground app, starts a TCP server, receives the image generation request, runs `ImageCreator`, saves the output PNG, sends the result back, and terminates. The window is hidden immediately on launch.
 
 ## Test resources
 

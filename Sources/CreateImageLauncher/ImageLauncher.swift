@@ -1,4 +1,3 @@
-import AppKit
 import CreateImageLogics
 import Foundation
 import Network
@@ -10,107 +9,40 @@ public struct ImageLauncher: Sendable {
     public let runnerPath: String
     public let port: UInt16
     public let timeout: Int
-    public let keepApp: Bool
 
-    public init(runnerPath: String, port: UInt16 = 51573, timeout: Int = 120, keepApp: Bool = false) {
+    public init(runnerPath: String, port: UInt16 = 51573, timeout: Int = 120) {
         self.runnerPath = runnerPath
         self.port = port
         self.timeout = timeout
-        self.keepApp = keepApp
     }
 
     public func run(request: ImageRequest) async throws -> ImageResponse {
-        // 1. Create temp .app bundle
-        let bundleDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("ImageRunner-\(UUID().uuidString)")
-        let appDir = bundleDir.appendingPathComponent("CreateImageRunner.app")
-        let contentsDir = appDir.appendingPathComponent("Contents")
-        let macOSDir = contentsDir.appendingPathComponent("MacOS")
-
-        let bundleId = UUID().uuidString
-
-        try FileManager.default.createDirectory(
-            at: macOSDir, withIntermediateDirectories: true
-        )
-
-        defer {
-            // Terminate runner process by bundle ID
-            let runningApps = NSRunningApplication.runningApplications(
-                withBundleIdentifier: bundleId
-            )
-            for app in runningApps {
-                app.terminate()
-                logger.info("Terminated runner process (PID: \(app.processIdentifier))")
-            }
-
-            if !keepApp {
-                do {
-                    try FileManager.default.removeItem(at: bundleDir)
-                    logger.info("Cleaned up temp bundle")
-                } catch {
-                    logger.error("Failed to clean up temp bundle: \(error)")
-                }
-            } else {
-                logger.info("Keeping app at: \(bundleDir.path, privacy: .public)")
-            }
-        }
-
-        // Copy executable
-        let destExecutable = macOSDir.appendingPathComponent("CreateImageRunner")
-        try FileManager.default.copyItem(
-            at: URL(fileURLWithPath: runnerPath), to: destExecutable
-        )
-
-        // Write Info.plist
-        let infoPlist = """
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" \
-"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>CreateImageRunner</string>
-    <key>CFBundleIdentifier</key>
-    <string>\(bundleId)</string>
-    <key>CFBundleName</key>
-    <string>CreateImageRunner</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleVersion</key>
-    <string>1.0</string>
-</dict>
-</plist>
-"""
-        try infoPlist.write(
-            to: contentsDir.appendingPathComponent("Info.plist"),
-            atomically: true,
-            encoding: .utf8
-        )
-
-        logger.info("Created bundle: \(appDir.path, privacy: .public)")
-
-        // 2. Launch runner via Launch Services
+        // 1. Launch runner binary directly via Process
         let deadline = Date().addingTimeInterval(TimeInterval(timeout))
 
-        logger.info("Launching app on port \(port)...")
-        let launchConfig = NSWorkspace.OpenConfiguration()
-        launchConfig.createsNewApplicationInstance = true
-        launchConfig.activates = true
-        launchConfig.arguments = ["--port", String(port)]
-        // NSApplication.shared must be initialized before NSWorkspace can
-        // properly launch an app via Launch Services.
-        await MainActor.run { _ = NSApplication.shared }
-        try await NSWorkspace.shared.openApplication(at: appDir, configuration: launchConfig)
+        logger.info("Launching runner on port \(port)...")
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: runnerPath)
+        process.arguments = ["--port", String(port)]
+        try process.run()
 
-        // 3. Connect to runner (retry until it's listening)
+        defer {
+            if process.isRunning {
+                process.terminate()
+            }
+            process.waitUntilExit()
+            logger.info("Runner process exited (PID: \(process.processIdentifier))")
+        }
+
+        // 2. Connect to runner (retry until it's listening)
         let connection = try await connectToRunner(port: port, deadline: deadline)
         defer { connection.cancel() }
 
-        // 4. Send request
+        // 3. Send request
         try await connection.sendMessage(request)
         logger.info("Sent request")
 
-        // 5. Receive response (with timeout)
+        // 4. Receive response (with timeout)
         let response: ImageResponse = try await withThrowingTaskGroup(of: ImageResponse.self) { group in
             group.addTask {
                 try await connection.receiveMessage()

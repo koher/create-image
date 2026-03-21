@@ -33,9 +33,6 @@ struct CreateImage: AsyncParsableCommand {
     @Option(name: [.short, .long], help: "TCP port for runner communication")
     var port: UInt16 = 51573
 
-    @Flag(help: "Keep the temporary .app bundle for debugging")
-    var keepApp: Bool = false
-
     func run() async throws {
         let runnerPath = Self.autoDetectRunner()
         guard !runnerPath.isEmpty else {
@@ -64,8 +61,7 @@ struct CreateImage: AsyncParsableCommand {
         let launcher = ImageLauncher(
             runnerPath: runnerPath,
             port: port,
-            timeout: timeout,
-            keepApp: keepApp
+            timeout: timeout
         )
 
         let response = try await launcher.run(request: request)

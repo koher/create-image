@@ -53,11 +53,7 @@ struct ImageLauncherTests {
             limit: 1
         )
 
-        let launcher = ImageLauncher(
-            runnerPath: runnerPath,
-            port: 51574,
-            timeout: 120
-        )
+        let launcher = ImageLauncher(runnerPath: runnerPath)
 
         let response = try await launcher.run(request: request)
 
@@ -91,11 +87,7 @@ struct ImageLauncherTests {
             limit: 2
         )
 
-        let launcher = ImageLauncher(
-            runnerPath: runnerPath,
-            port: 51574,
-            timeout: 120
-        )
+        let launcher = ImageLauncher(runnerPath: runnerPath)
 
         let response = try await launcher.run(request: request)
 
@@ -124,11 +116,7 @@ struct ImageLauncherTests {
             limit: 1
         )
 
-        let launcher = ImageLauncher(
-            runnerPath: runnerPath,
-            port: 51574,
-            timeout: 120
-        )
+        let launcher = ImageLauncher(runnerPath: runnerPath)
 
         let response = try await launcher.run(request: request)
 
@@ -156,11 +144,7 @@ struct ImageLauncherTests {
             sourceImage: sourceImageData
         )
 
-        let launcher = ImageLauncher(
-            runnerPath: runnerPath,
-            port: 51574,
-            timeout: 120
-        )
+        let launcher = ImageLauncher(runnerPath: runnerPath)
 
         let response = try await launcher.run(request: request)
 
@@ -176,17 +160,17 @@ struct ImageLauncherTests {
             .appendingPathComponent("nonexistent-runner")
             .path
 
-        let launcher = ImageLauncher(
-            runnerPath: invalidPath,
-            port: 51574,
-            timeout: 120
-        )
-
         let outputPath = FileManager.default.temporaryDirectory
             .appendingPathComponent("test-invalid-\(UUID().uuidString).png")
             .path
 
         defer { try? FileManager.default.removeItem(atPath: outputPath) }
+
+        let launcher = ImageLauncher(
+            runnerPath: invalidPath,
+            port: 51574,
+            timeout: 120
+        )
 
         let request = ImageRequest(
             prompt: "anything",
