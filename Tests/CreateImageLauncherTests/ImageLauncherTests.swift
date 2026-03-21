@@ -166,11 +166,7 @@ struct ImageLauncherTests {
 
         defer { try? FileManager.default.removeItem(atPath: outputPath) }
 
-        let launcher = ImageLauncher(
-            runnerPath: invalidPath,
-            port: 51574,
-            timeout: 120
-        )
+        let launcher = ImageLauncher(runnerPath: invalidPath)
 
         let request = ImageRequest(
             prompt: "anything",
