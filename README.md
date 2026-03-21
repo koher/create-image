@@ -11,7 +11,7 @@ A command-line tool that generates images using Apple's [ImageCreator](https://d
 ## Usage
 
 ```bash
-swift run create-image "a cat sitting on a rainbow" --output cat.png
+swift run create-image "a cat sitting on a rainbow"
 ```
 
 ## Options
@@ -31,21 +31,21 @@ swift run create-image "a cat sitting on a rainbow" --output cat.png
 ## Examples
 
 ```bash
-# Generate with default style (animation)
-swift run create-image "a dog playing in snow" --output dog.png
+# Specify output path
+swift run create-image -o dog.png "a dog playing in snow"
 
 # Use sketch style
-swift run create-image "a mountain landscape" --output mountain.png --style sketch
+swift run create-image --style sketch "a mountain landscape"
 
 # Generate multiple images
-swift run create-image "a sunset" --output sunset.png --limit 3
+swift run create-image --limit 3 -o sunset.png "a sunset"
 # Produces: sunset-1.png, sunset-2.png, sunset-3.png
 
 # Generate a person using a source face image
-swift run create-image "a person walking in the park" --output person.png --source-image face.jpg
+swift run create-image --source-image face.jpg "a person walking in the park"
 
 # Debug mode (keep temp bundle, view logs with: log show --predicate 'subsystem == "create-image"' --last 1m)
-swift run create-image "a cat" --output cat.png --keep-app
+swift run create-image --keep-app "a cat"
 ```
 
 ## How it works
