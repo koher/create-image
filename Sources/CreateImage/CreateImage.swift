@@ -1,7 +1,7 @@
 import AppKit
 import ArgumentParser
 import Foundation
-import ImageCreatorLogics
+import CreateImageLogics
 import Network
 import os
 
@@ -41,14 +41,14 @@ struct CreateImage: AsyncParsableCommand {
         let executablePath = Self.autoDetectRunner()
         guard !executablePath.isEmpty else {
             throw ValidationError(
-                "Could not find ImageCreatorRunner. Run 'swift build' first."
+                "Could not find CreateImageRunner. Run 'swift build' first."
             )
         }
 
         // 2. Create temp .app bundle
         let bundleDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("ImageRunner-\(UUID().uuidString)")
-        let appDir = bundleDir.appendingPathComponent("ImageCreatorRunner.app")
+        let appDir = bundleDir.appendingPathComponent("CreateImageRunner.app")
         let contentsDir = appDir.appendingPathComponent("Contents")
         let macOSDir = contentsDir.appendingPathComponent("MacOS")
 
@@ -81,7 +81,7 @@ struct CreateImage: AsyncParsableCommand {
         }
 
         // Copy executable
-        let destExecutable = macOSDir.appendingPathComponent("ImageCreatorRunner")
+        let destExecutable = macOSDir.appendingPathComponent("CreateImageRunner")
         try FileManager.default.copyItem(
             at: URL(fileURLWithPath: executablePath), to: destExecutable
         )
@@ -94,11 +94,11 @@ struct CreateImage: AsyncParsableCommand {
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>ImageCreatorRunner</string>
+    <string>CreateImageRunner</string>
     <key>CFBundleIdentifier</key>
     <string>\(bundleId)</string>
     <key>CFBundleName</key>
-    <string>ImageCreatorRunner</string>
+    <string>CreateImageRunner</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
@@ -235,7 +235,7 @@ struct CreateImage: AsyncParsableCommand {
     private static func autoDetectRunner() -> String {
         let selfURL = URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
         let sibling = selfURL.deletingLastPathComponent()
-            .appendingPathComponent("ImageCreatorRunner")
+            .appendingPathComponent("CreateImageRunner")
         if FileManager.default.fileExists(atPath: sibling.path) {
             return sibling.path
         }

@@ -15,16 +15,16 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ImageCreatorLogics"
+            name: "CreateImageLogics"
         ),
         .executableTarget(
-            name: "ImageCreatorRunner",
-            dependencies: ["ImageCreatorLogics"]
+            name: "CreateImageRunner",
+            dependencies: ["CreateImageLogics"]
         ),
         .executableTarget(
             name: "CreateImage",
             dependencies: [
-                "ImageCreatorLogics",
+                "CreateImageLogics",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),

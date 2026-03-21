@@ -54,6 +54,6 @@ swift run create-image "a cat" --output cat.png --keep-app
 This tool works around that constraint with a two-component architecture:
 
 1. **CreateImage** (CLI launcher) -- parses arguments, builds a temporary `.app` bundle containing the GUI app, launches it via `NSWorkspace.openApplication`, and communicates over TCP to send the request and receive the result.
-2. **ImageCreatorRunner** (GUI app) -- a minimal SwiftUI app that starts a TCP server, receives the image generation request, runs `ImageCreator`, saves the output PNG, sends the result back, and terminates. The window is hidden immediately on launch.
+2. **CreateImageRunner** (GUI app) -- a minimal SwiftUI app that starts a TCP server, receives the image generation request, runs `ImageCreator`, saves the output PNG, sends the result back, and terminates. The window is hidden immediately on launch.
 
 The temporary `.app` bundle is created in the system temporary directory and removed automatically after each run (unless `--keep-app` is specified). The runner process is also terminated via `NSRunningApplication` on cleanup.

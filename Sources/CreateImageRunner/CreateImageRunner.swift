@@ -1,5 +1,5 @@
 import AppKit
-import ImageCreatorLogics
+import CreateImageLogics
 import ImagePlayground
 import Network
 import os
@@ -8,7 +8,7 @@ import SwiftUI
 private let logger = Logger(subsystem: "create-image", category: "runner")
 
 @main
-struct ImageCreatorRunner: App {
+struct CreateImageRunner: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
