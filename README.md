@@ -44,7 +44,7 @@ swift run create-image --source-image face.jpg "a person walking in the park"
 
 ## How it works
 
-`ImageCreator` requires a macOS process with `NSApp.setActivationPolicy(.regular)` (foreground app status). The CLI sets this activation policy before calling `ImageCreator` directly.
+`ImageCreator` is called directly from the CLI process. No separate app or process is needed.
 
 ## Test resources
 

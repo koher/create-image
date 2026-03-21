@@ -11,13 +11,6 @@ public struct ImageLauncher: Sendable {
     public init() {}
 
     public func run(request: ImageRequest) async throws -> ImageResponse {
-        // Set up NSApplication as a foreground app
-        await MainActor.run {
-            let app = NSApplication.shared
-            app.setActivationPolicy(.regular)
-            app.activate()
-        }
-
         do {
             logger.info("Initializing ImageCreator...")
             let creator = try await ImageCreator()

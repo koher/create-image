@@ -11,7 +11,6 @@ CreateImage (CLI, AsyncParsableCommand)
   → Thin wrapper: parses arguments, delegates to ImageLauncher
 
 CreateImageLauncher (library)
-  → Sets NSApp activation policy to .regular (required for ImageCreator)
   → Calls ImageCreator directly to generate images
   → Saves output as PNG
 
@@ -21,11 +20,8 @@ CreateImageLogics (shared library)
 
 ## Critical constraints discovered during development
 
-### ImageCreator requires foreground activation policy
-- The process must call `NSApp.setActivationPolicy(.regular)` and `NSApp.activate()` before using ImageCreator
-- Without this, `images(for:style:limit:)` fails with `backgroundCreationForbidden`
-- A .app bundle is NOT required — a bare executable works as long as the activation policy is set correctly
-- A separate runner process is NOT required — the CLI process itself can use ImageCreator
+### ImageCreator works from a bare CLI executable
+- No .app bundle, foreground activation policy, or separate runner process required
 - SwiftPM Command Plugin sandbox blocks ImageCreator entirely
 
 ### NWListener does not support Unix domain sockets
