@@ -1,11 +1,7 @@
-import AppKit
 import ArgumentParser
-import Foundation
+import CreateImageLauncher
 import CreateImageLogics
-import Network
-import os
-
-private let logger = Logger(subsystem: "create-image", category: "launcher")
+import Foundation
 
 @main
 struct CreateImage: AsyncParsableCommand {
@@ -41,108 +37,21 @@ struct CreateImage: AsyncParsableCommand {
     var keepApp: Bool = false
 
     func run() async throws {
-        let executablePath = Self.autoDetectRunner()
-        guard !executablePath.isEmpty else {
+        let runnerPath = Self.autoDetectRunner()
+        guard !runnerPath.isEmpty else {
             throw ValidationError(
                 "Could not find CreateImageRunner. Run 'swift build' first."
             )
         }
 
-        // 2. Create temp .app bundle
-        let bundleDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("ImageRunner-\(UUID().uuidString)")
-        let appDir = bundleDir.appendingPathComponent("CreateImageRunner.app")
-        let contentsDir = appDir.appendingPathComponent("Contents")
-        let macOSDir = contentsDir.appendingPathComponent("MacOS")
-
-        let bundleId = UUID().uuidString
-
-        try FileManager.default.createDirectory(
-            at: macOSDir, withIntermediateDirectories: true
-        )
-
-        defer {
-            // Terminate runner process by bundle ID
-            let runningApps = NSRunningApplication.runningApplications(
-                withBundleIdentifier: bundleId
-            )
-            for app in runningApps {
-                app.terminate()
-                logger.info("Terminated runner process (PID: \(app.processIdentifier))")
-            }
-
-            if !keepApp {
-                do {
-                    try FileManager.default.removeItem(at: bundleDir)
-                    logger.info("Cleaned up temp bundle")
-                } catch {
-                    logger.error("Failed to clean up temp bundle: \(error)")
-                }
-            } else {
-                logger.info("Keeping app at: \(bundleDir.path, privacy: .public)")
-            }
-        }
-
-        // Copy executable
-        let destExecutable = macOSDir.appendingPathComponent("CreateImageRunner")
-        try FileManager.default.copyItem(
-            at: URL(fileURLWithPath: executablePath), to: destExecutable
-        )
-
-        // Write Info.plist
-        let infoPlist = """
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" \
-"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>CreateImageRunner</string>
-    <key>CFBundleIdentifier</key>
-    <string>\(bundleId)</string>
-    <key>CFBundleName</key>
-    <string>CreateImageRunner</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleVersion</key>
-    <string>1.0</string>
-</dict>
-</plist>
-"""
-        try infoPlist.write(
-            to: contentsDir.appendingPathComponent("Info.plist"),
-            atomically: true,
-            encoding: .utf8
-        )
-
-        logger.info("Created bundle: \(appDir.path, privacy: .public)")
-
-        // 3. Launch runner via Launch Services
-        let deadline = Date().addingTimeInterval(TimeInterval(timeout))
-
-        logger.info("Launching app on port \(port)...")
-        let launchConfig = NSWorkspace.OpenConfiguration()
-        launchConfig.createsNewApplicationInstance = true
-        launchConfig.activates = true
-        launchConfig.arguments = ["--port", String(port)]
-        // NSApplication.shared must be initialized before NSWorkspace can
-        // properly launch an app via Launch Services.
-        await MainActor.run { _ = NSApplication.shared }
-        try await NSWorkspace.shared.openApplication(at: appDir, configuration: launchConfig)
-
-        // 4. Connect to runner (retry until it's listening)
-        let connection = try await connectToRunner(port: port, deadline: deadline)
-        defer { connection.cancel() }
-
-        // 5. Send request
         let outputPath = URL(fileURLWithPath: output).path
         let sourceImageData: Data?
         if let sourceImage {
-            let url = URL(fileURLWithPath: sourceImage)
-            sourceImageData = try Data(contentsOf: url)
+            sourceImageData = try Data(contentsOf: URL(fileURLWithPath: sourceImage))
         } else {
             sourceImageData = nil
         }
+
         let request = ImageRequest(
             prompt: prompt,
             output: outputPath,
@@ -151,27 +60,16 @@ struct CreateImage: AsyncParsableCommand {
             sourceImage: sourceImageData,
             maxRetries: retry
         )
-        try await connection.sendMessage(request)
-        logger.info("Sent request")
 
-        // 6. Receive response (with timeout)
-        let response: ImageResponse = try await withThrowingTaskGroup(of: ImageResponse.self) { group in
-            group.addTask {
-                try await connection.receiveMessage()
-            }
-            group.addTask {
-                let remaining = deadline.timeIntervalSinceNow
-                if remaining > 0 {
-                    try await Task.sleep(for: .seconds(remaining))
-                }
-                throw TimeoutError.imageCreation
-            }
-            let result = try await group.next()!
-            group.cancelAll()
-            return result
-        }
+        let launcher = ImageLauncher(
+            runnerPath: runnerPath,
+            port: port,
+            timeout: timeout,
+            keepApp: keepApp
+        )
 
-        // 7. Report result
+        let response = try await launcher.run(request: request)
+
         if response.success {
             print("Saved: \(response.output ?? output)")
         } else {

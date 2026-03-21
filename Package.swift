@@ -17,6 +17,10 @@ let package = Package(
         .target(
             name: "CreateImageLogics"
         ),
+        .target(
+            name: "CreateImageLauncher",
+            dependencies: ["CreateImageLogics"]
+        ),
         .executableTarget(
             name: "CreateImageRunner",
             dependencies: ["CreateImageLogics"]
@@ -24,6 +28,7 @@ let package = Package(
         .executableTarget(
             name: "CreateImage",
             dependencies: [
+                "CreateImageLauncher",
                 "CreateImageLogics",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
