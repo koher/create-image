@@ -58,3 +58,7 @@ This tool works around that constraint with a two-component architecture:
 2. **CreateImageRunner** (GUI app) -- a minimal SwiftUI app that starts a TCP server, receives the image generation request, runs `ImageCreator`, saves the output PNG, sends the result back, and terminates. The window is hidden immediately on launch.
 
 The temporary `.app` bundle is created in the system temporary directory and removed automatically after each run (unless `--keep-app` is specified). The runner process is also terminated via `NSRunningApplication` on cleanup.
+
+## Test resources
+
+`Tests/CreateImageLauncherTests/Resources/HumanFace.jpg` is an AI-generated image and does not depict any real person.
