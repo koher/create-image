@@ -20,8 +20,11 @@ CreateImageLogics (shared library)
 
 ## Critical constraints discovered during development
 
-### ImageCreator works from a bare CLI executable
-- No .app bundle, foreground activation policy, or separate runner process required
+### ImageCreator must be called from a library target, not an executable target
+- Calling ImageCreator directly from an executable target triggers `backgroundCreationForbidden`
+- The same code works when placed in a library target and called from the executable
+- `NSApp.setActivationPolicy(.regular)` does not resolve this — the module boundary itself matters
+- No .app bundle or separate runner process is required
 - SwiftPM Command Plugin sandbox blocks ImageCreator entirely
 
 ### NWListener does not support Unix domain sockets

@@ -51,13 +51,7 @@ struct CreateImage: AsyncParsableCommand {
         if response.success {
             print("Saved: \(response.output ?? output)")
         } else {
-            let errorMsg = response.error ?? "unknown"
-            if errorMsg.contains("backgroundCreationForbidden") {
-                throw CleanExit.message(
-                    "ImageCreator rejected generation because the app was not considered foreground/active enough."
-                )
-            }
-            throw CleanExit.message("Error: \(errorMsg)")
+            throw CleanExit.message("Error: \(response.error ?? "unknown")")
         }
     }
 }
