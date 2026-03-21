@@ -103,30 +103,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "sketch": .sketch
             default: .animation
             }
-            let sequence = creator.images(
-                for: concepts,
-                style: style,
-                limit: request.limit
-            )
 
-            logger.info("Starting image generation...")
-            var index = 0
-            for try await created in sequence {
-                index += 1
-                let path = request.limit == 1
-                    ? request.output
-                    : numberedPath(request.output, index)
+            let maxAttempts = max(1, request.maxRetries)
+            var lastError: String = ""
 
-                let dir = URL(fileURLWithPath: path).deletingLastPathComponent()
-                try FileManager.default.createDirectory(
-                    at: dir, withIntermediateDirectories: true
-                )
+            for attempt in 1...maxAttempts {
+                do {
+                    logger.info("Starting image generation (attempt \(attempt)/\(maxAttempts))...")
+                    let sequence = creator.images(
+                        for: concepts,
+                        style: style,
+                        limit: request.limit
+                    )
 
-                try saveCGImage(created.cgImage, to: path)
-                logger.info("Saved image \(index): \(path, privacy: .public)")
+                    var index = 0
+                    for try await created in sequence {
+                        index += 1
+                        let path = request.limit == 1
+                            ? request.output
+                            : numberedPath(request.output, index)
+
+                        let dir = URL(fileURLWithPath: path).deletingLastPathComponent()
+                        try FileManager.default.createDirectory(
+                            at: dir, withIntermediateDirectories: true
+                        )
+
+                        try saveCGImage(created.cgImage, to: path)
+                        logger.info("Saved image \(index): \(path, privacy: .public)")
+                    }
+
+                    return ImageResponse(success: true, output: request.output)
+                } catch {
+                    lastError = "\(type(of: error)).\(error): \(error.localizedDescription)"
+                    logger.warning("Attempt \(attempt) failed: \(lastError)")
+                    if attempt < maxAttempts {
+                        logger.info("Retrying...")
+                    }
+                }
             }
 
-            return ImageResponse(success: true, output: request.output)
+            logger.error("All \(maxAttempts) attempts failed")
+            return ImageResponse(success: false, error: lastError)
         } catch {
             let detail = "\(type(of: error)).\(error): \(error.localizedDescription)"
             logger.error("Error: \(detail)")

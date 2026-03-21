@@ -23,6 +23,7 @@ swift run create-image "a cat sitting on a rainbow" --output cat.png
 | `--style`, `-s` | Image style: `animation`, `illustration`, or `sketch` | `animation` |
 | `--limit`, `-l` | Number of images to generate | `1` |
 | `--source-image` | Path to a source image (e.g. a face photo for person prompts) | — |
+| `--retry` | Max retries on image generation failure | `3` |
 | `--port`, `-p` | TCP port for runner communication | `51573` |
 | `--timeout` | Max seconds to wait for the entire operation | `120` |
 | `--keep-app` | Keep the temporary .app bundle for debugging | off |

@@ -28,6 +28,9 @@ struct CreateImage: AsyncParsableCommand {
     @Option(name: .long, help: "Path to a source image (e.g. a face photo)")
     var sourceImage: String?
 
+    @Option(help: "Max retries on image generation failure")
+    var retry: Int = 3
+
     @Option(help: "Max seconds to wait for image generation")
     var timeout: Int = 120
 
@@ -145,7 +148,8 @@ struct CreateImage: AsyncParsableCommand {
             output: outputPath,
             style: style,
             limit: limit,
-            sourceImage: sourceImageData
+            sourceImage: sourceImageData,
+            maxRetries: retry
         )
         try await sendMessage(request, on: connection)
         logger.info("Sent request")
