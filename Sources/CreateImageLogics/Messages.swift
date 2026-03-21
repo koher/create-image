@@ -1,8 +1,6 @@
 import Foundation
 
-// MARK: - Messages
-
-public struct ImageRequest: Codable, Sendable {
+public struct ImageRequest: Sendable {
     public let prompt: String
     public let output: String
     public let style: String
@@ -20,14 +18,7 @@ public struct ImageRequest: Codable, Sendable {
     }
 }
 
-public struct ImageResponse: Codable, Sendable {
-    public let success: Bool
-    public let output: String?
-    public let error: String?
-
-    public init(success: Bool, output: String? = nil, error: String? = nil) {
-        self.success = success
-        self.output = output
-        self.error = error
-    }
+public enum ImageResponse: Sendable {
+    case success(output: String)
+    case failure(error: String)
 }

@@ -46,12 +46,11 @@ struct CreateImage: AsyncParsableCommand {
         )
 
         let launcher = ImageLauncher()
-        let response = try await launcher.run(request: request)
-
-        if response.success {
-            print("Saved: \(response.output ?? output)")
-        } else {
-            throw CleanExit.message("Error: \(response.error ?? "unknown")")
+        switch try await launcher.run(request: request) {
+        case .success(let output):
+            print("Saved: \(output)")
+        case .failure(let error):
+            throw CleanExit.message("Error: \(error)")
         }
     }
 }

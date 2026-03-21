@@ -58,18 +58,18 @@ public struct ImageLauncher: Sendable {
                         logger.info("Saved image \(index): \(path, privacy: .public)")
                     }
 
-                    return ImageResponse(success: true, output: request.output)
+                    return .success(output: request.output)
                 } catch {
                     lastError = "\(type(of: error)).\(error): \(error.localizedDescription)"
                     logger.warning("Attempt \(attempt) failed: \(lastError)")
                 }
             }
 
-            return ImageResponse(success: false, error: lastError)
+            return .failure(error: lastError)
         } catch {
             let detail = "\(type(of: error)).\(error): \(error.localizedDescription)"
             logger.error("Error: \(detail)")
-            return ImageResponse(success: false, error: detail)
+            return .failure(error: detail)
         }
     }
 }

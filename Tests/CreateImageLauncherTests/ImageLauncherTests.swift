@@ -26,8 +26,10 @@ struct ImageLauncherTests {
         let launcher = ImageLauncher()
         let response = try await launcher.run(request: request)
 
-        #expect(response.success)
-        #expect(response.error == nil)
+        guard case .success = response else {
+            Issue.record("Expected success, got \(response)")
+            return
+        }
         #expect(FileManager.default.fileExists(atPath: outputPath))
     }
 
@@ -59,8 +61,10 @@ struct ImageLauncherTests {
         let launcher = ImageLauncher()
         let response = try await launcher.run(request: request)
 
-        #expect(response.success)
-        #expect(response.error == nil)
+        guard case .success = response else {
+            Issue.record("Expected success, got \(response)")
+            return
+        }
         for path in expectedPaths {
             #expect(FileManager.default.fileExists(atPath: path))
         }
@@ -87,7 +91,10 @@ struct ImageLauncherTests {
         let launcher = ImageLauncher()
         let response = try await launcher.run(request: request)
 
-        #expect(response.success)
+        guard case .success = response else {
+            Issue.record("Expected success, got \(response)")
+            return
+        }
         #expect(FileManager.default.fileExists(atPath: outputPath))
     }
 
@@ -114,8 +121,10 @@ struct ImageLauncherTests {
         let launcher = ImageLauncher()
         let response = try await launcher.run(request: request)
 
-        #expect(response.success)
-        #expect(response.error == nil)
+        guard case .success = response else {
+            Issue.record("Expected success, got \(response)")
+            return
+        }
         #expect(FileManager.default.fileExists(atPath: outputPath))
     }
 }
