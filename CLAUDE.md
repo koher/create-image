@@ -10,7 +10,7 @@ A CLI tool (`swift run create-image`) that generates images using Apple's `Image
 CreateImage (CLI, AsyncParsableCommand)
   → Thin wrapper: parses arguments, delegates to ImageLauncher
 
-CreateImageLauncher (library)
+CreateImageCore (library)
   → Calls ImageCreator directly to generate images
   → Saves output as PNG
 
@@ -54,6 +54,6 @@ swift run create-image --source-image face.jpg "a person walking"
 ## Style
 
 - Logger subsystem: `create-image` (no reverse DNS)
-- Logger category: `launcher` (CreateImageLauncher)
+- Logger category: `runner` (CreateImageCore)
 - Default image style: `animation`
 - Errors include type name + localizedDescription for diagnostics

@@ -4,9 +4,9 @@ import Foundation
 import ImagePlayground
 import os
 
-private let logger = Logger(subsystem: "create-image", category: "launcher")
+private let logger = Logger(subsystem: "create-image", category: "runner")
 
-public struct ImageLauncher: Sendable {
+public struct CreateImageRunner: Sendable {
 
     public init() {}
 

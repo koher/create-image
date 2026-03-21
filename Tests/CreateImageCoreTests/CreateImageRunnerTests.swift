@@ -1,10 +1,10 @@
-import CreateImageLauncher
+import CreateImageCore
 import CreateImageLogics
 import Foundation
 import Testing
 
 @Suite(.serialized)
-struct ImageLauncherTests {
+struct CreateImageRunnerTests {
 
     // MARK: - Style variations
 
@@ -23,7 +23,7 @@ struct ImageLauncherTests {
             limit: 1
         )
 
-        let launcher = ImageLauncher()
+        let launcher = CreateImageRunner()
         let response = try await launcher.run(request: request)
 
         guard case .success = response else {
@@ -58,7 +58,7 @@ struct ImageLauncherTests {
             limit: 2
         )
 
-        let launcher = ImageLauncher()
+        let launcher = CreateImageRunner()
         let response = try await launcher.run(request: request)
 
         guard case .success = response else {
@@ -88,7 +88,7 @@ struct ImageLauncherTests {
             limit: 1
         )
 
-        let launcher = ImageLauncher()
+        let launcher = CreateImageRunner()
         let response = try await launcher.run(request: request)
 
         guard case .success = response else {
@@ -118,7 +118,7 @@ struct ImageLauncherTests {
             sourceImage: sourceImageData
         )
 
-        let launcher = ImageLauncher()
+        let launcher = CreateImageRunner()
         let response = try await launcher.run(request: request)
 
         guard case .success = response else {

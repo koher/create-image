@@ -1,5 +1,5 @@
 import ArgumentParser
-import CreateImageLauncher
+import CreateImageCore
 import CreateImageLogics
 import Foundation
 
@@ -45,7 +45,7 @@ struct CreateImage: AsyncParsableCommand {
             maxRetries: retry
         )
 
-        let launcher = ImageLauncher()
+        let launcher = CreateImageRunner()
         switch try await launcher.run(request: request) {
         case .success(let output):
             print("Saved: \(output)")

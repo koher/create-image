@@ -18,20 +18,20 @@ let package = Package(
             name: "CreateImageLogics"
         ),
         .target(
-            name: "CreateImageLauncher",
+            name: "CreateImageCore",
             dependencies: ["CreateImageLogics"]
         ),
         .executableTarget(
             name: "CreateImage",
             dependencies: [
-                "CreateImageLauncher",
+                "CreateImageCore",
                 "CreateImageLogics",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
         .testTarget(
-            name: "CreateImageLauncherTests",
-            dependencies: ["CreateImageLauncher", "CreateImageLogics"],
+            name: "CreateImageCoreTests",
+            dependencies: ["CreateImageCore", "CreateImageLogics"],
             resources: [.copy("Resources/HumanFace.jpg")]
         ),
     ]
