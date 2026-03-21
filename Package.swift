@@ -22,10 +22,6 @@ let package = Package(
             dependencies: ["CreateImageLogics"]
         ),
         .executableTarget(
-            name: "CreateImageRunner",
-            dependencies: ["CreateImageLogics"]
-        ),
-        .executableTarget(
             name: "CreateImage",
             dependencies: [
                 "CreateImageLauncher",

@@ -2,7 +2,7 @@
 
 ## What this project does
 
-A CLI tool (`swift run create-image`) that generates images using Apple's `ImageCreator` (ImagePlayground framework). Because `ImageCreator` requires a foreground macOS app with `NSApp.setActivationPolicy(.regular)`, the tool has a two-process architecture.
+A CLI tool (`swift run create-image`) that generates images using Apple's `ImageCreator` (ImagePlayground framework).
 
 ## Architecture
 
@@ -11,39 +11,22 @@ CreateImage (CLI, AsyncParsableCommand)
   → Thin wrapper: parses arguments, delegates to ImageLauncher
 
 CreateImageLauncher (library)
-  → Launches CreateImageRunner binary via Process
-  → Connects via TCP (Network framework, NWConnection) on fixed port 51573
-  → Sends ImageRequest, receives ImageResponse (length-prefixed JSON)
-  → Terminates runner process on completion (defer)
-
-CreateImageRunner (SwiftUI App, TCP server)
-  → Launched by CreateImageLauncher as a child process
-  → Sets activation policy to .regular and activates (required for ImageCreator)
-  → Starts NWListener on the port passed via --port argument
-  → Receives ImageRequest, runs ImageCreator, sends ImageResponse
-  → Window is hidden immediately (orderOut), but activation policy must stay .regular
-  → Terminates itself after handling one request
+  → Sets NSApp activation policy to .regular (required for ImageCreator)
+  → Calls ImageCreator directly to generate images
+  → Saves output as PNG
 
 CreateImageLogics (shared library)
   → ImageRequest / ImageResponse (Codable)
-  → sendMessage / receiveMessage (length-prefixed TCP helpers)
 ```
 
 ## Critical constraints discovered during development
 
 ### ImageCreator requires foreground activation policy
-- The runner process must call `NSApp.setActivationPolicy(.regular)` and `NSApp.activate()` before using ImageCreator
+- The process must call `NSApp.setActivationPolicy(.regular)` and `NSApp.activate()` before using ImageCreator
 - Without this, `images(for:style:limit:)` fails with `backgroundCreationForbidden`
 - A .app bundle is NOT required — a bare executable works as long as the activation policy is set correctly
-- SwiftPM Command Plugin sandbox blocks app launching from child processes entirely
-
-### Activation policy must stay .regular
-- Switching to .accessory after launch causes backgroundCreationForbidden
-- The Dock icon appearing briefly is an unavoidable trade-off
-- Windows can be hidden with orderOut(nil)
-
-### NWConnection .waiting state must be handled
-- Without handling .waiting as a failure in the stateUpdateHandler, the connection hangs forever instead of retrying
+- A separate runner process is NOT required — the CLI process itself can use ImageCreator
+- SwiftPM Command Plugin sandbox blocks ImageCreator entirely
 
 ### NWListener does not support Unix domain sockets
 - NWEndpoint.unix(path:) works for NWConnection (client) only
@@ -72,6 +55,6 @@ swift run create-image --source-image face.jpg "a person walking"
 ## Style
 
 - Logger subsystem: `create-image` (no reverse DNS)
-- Logger categories: `launcher` (CreateImageLauncher), `runner` (CreateImageRunner)
+- Logger category: `launcher` (CreateImageLauncher)
 - Default image style: `animation`
 - Errors include type name + localizedDescription for diagnostics

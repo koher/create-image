@@ -24,8 +24,6 @@ swift run create-image "a cat sitting on a rainbow"
 | `--limit`, `-l` | Number of images to generate | `1` |
 | `--source-image` | Path to a source image (e.g. a face photo for person prompts) | — |
 | `--retry` | Max retries on image generation failure | `3` |
-| `--port`, `-p` | TCP port for runner communication | `51573` |
-| `--timeout` | Max seconds to wait for the entire operation | `120` |
 
 ## Examples
 
@@ -46,13 +44,7 @@ swift run create-image --source-image face.jpg "a person walking in the park"
 
 ## How it works
 
-`ImageCreator` requires a macOS process with `NSApp.setActivationPolicy(.regular)` (foreground app status). A plain CLI process triggers `backgroundCreationForbidden`.
-
-This tool works around that constraint with a two-process architecture:
-
-1. **CreateImage** (CLI) -- parses arguments and delegates to **CreateImageLauncher**.
-2. **CreateImageLauncher** (library) -- launches the **CreateImageRunner** binary as a child process via `Process`, communicates over TCP to send the request and receive the result, and terminates the runner on completion.
-3. **CreateImageRunner** (GUI app) -- a minimal SwiftUI app that activates itself as a foreground app, starts a TCP server, receives the image generation request, runs `ImageCreator`, saves the output PNG, sends the result back, and terminates. The window is hidden immediately on launch.
+`ImageCreator` requires a macOS process with `NSApp.setActivationPolicy(.regular)` (foreground app status). The CLI sets this activation policy before calling `ImageCreator` directly.
 
 ## Test resources
 

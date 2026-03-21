@@ -27,20 +27,7 @@ struct CreateImage: AsyncParsableCommand {
     @Option(help: "Max retries on image generation failure")
     var retry: Int = 3
 
-    @Option(help: "Max seconds to wait for image generation")
-    var timeout: Int = 120
-
-    @Option(name: [.short, .long], help: "TCP port for runner communication")
-    var port: UInt16 = 51573
-
     func run() async throws {
-        let runnerPath = Self.autoDetectRunner()
-        guard !runnerPath.isEmpty else {
-            throw ValidationError(
-                "Could not find CreateImageRunner. Run 'swift build' first."
-            )
-        }
-
         let outputPath = URL(fileURLWithPath: output).path
         let sourceImageData: Data?
         if let sourceImage {
@@ -58,12 +45,7 @@ struct CreateImage: AsyncParsableCommand {
             maxRetries: retry
         )
 
-        let launcher = ImageLauncher(
-            runnerPath: runnerPath,
-            port: port,
-            timeout: timeout
-        )
-
+        let launcher = ImageLauncher()
         let response = try await launcher.run(request: request)
 
         if response.success {
@@ -77,17 +59,5 @@ struct CreateImage: AsyncParsableCommand {
             }
             throw CleanExit.message("Error: \(errorMsg)")
         }
-    }
-
-    // MARK: - Helpers
-
-    private static func autoDetectRunner() -> String {
-        let selfURL = URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
-        let sibling = selfURL.deletingLastPathComponent()
-            .appendingPathComponent("CreateImageRunner")
-        if FileManager.default.fileExists(atPath: sibling.path) {
-            return sibling.path
-        }
-        return ""
     }
 }

@@ -31,7 +31,3 @@ public struct ImageResponse: Codable, Sendable {
         self.error = error
     }
 }
-
-public enum ProtocolError: Error {
-    case noData
-}
