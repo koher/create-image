@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for window in NSApp.windows { window.orderOut(nil) }
 
         let args = ProcessInfo.processInfo.arguments
-        guard let portStr = flagValue(args, "--port"),
+        guard let portStr = Self.flagValue(args, "--port"),
               let port = UInt16(portStr)
         else {
             logger.error("Missing --port argument")
@@ -73,10 +73,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             do {
-                let request: ImageRequest = try await receiveMessage(from: connection)
+                let request: ImageRequest = try await connection.receiveMessage()
                 logger.info("Received request: \(request.prompt, privacy: .public)")
                 let response = await processRequest(request)
-                try await sendMessage(response, on: connection)
+                try await connection.sendMessage(response)
             } catch {
                 logger.error("Connection error: \(error)")
             }
@@ -121,14 +121,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         index += 1
                         let path = request.limit == 1
                             ? request.output
-                            : numberedPath(request.output, index)
+                            : URL(fileURLWithPath: request.output).numbered(index).path
 
                         let dir = URL(fileURLWithPath: path).deletingLastPathComponent()
                         try FileManager.default.createDirectory(
                             at: dir, withIntermediateDirectories: true
                         )
 
-                        try saveCGImage(created.cgImage, to: path)
+                        try created.cgImage.savePNG(to: path)
                         logger.info("Saved image \(index): \(path, privacy: .public)")
                     }
 
@@ -152,31 +152,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-// MARK: - Helpers
+// MARK: - AppDelegate Helpers
 
-private func flagValue(_ args: [String], _ flag: String) -> String? {
-    guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else {
-        return nil
+extension AppDelegate {
+    fileprivate static func flagValue(_ args: [String], _ flag: String) -> String? {
+        guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else {
+            return nil
+        }
+        return args[idx + 1]
     }
-    return args[idx + 1]
 }
 
-private func saveCGImage(_ cgImage: CGImage, to path: String) throws {
-    let bitmap = NSBitmapImageRep(cgImage: cgImage)
-    guard let pngData = bitmap.representation(using: .png, properties: [:]) else {
-        throw ImageSaveError.pngConversionFailed
-    }
-    try pngData.write(to: URL(fileURLWithPath: path))
-}
-
-private func numberedPath(_ path: String, _ index: Int) -> String {
-    let url = URL(fileURLWithPath: path)
-    let ext = url.pathExtension
-    let base = url.deletingPathExtension().path
-    return "\(base)-\(index).\(ext)"
-}
+// MARK: - CGImage + PNG
 
 private enum ImageSaveError: LocalizedError {
     case pngConversionFailed
     var errorDescription: String? { "Failed to convert image to PNG format" }
+}
+
+extension CGImage {
+    fileprivate func savePNG(to path: String) throws {
+        let bitmap = NSBitmapImageRep(cgImage: self)
+        guard let pngData = bitmap.representation(using: .png, properties: [:]) else {
+            throw ImageSaveError.pngConversionFailed
+        }
+        try pngData.write(to: URL(fileURLWithPath: path))
+    }
+}
+
+// MARK: - URL + Numbering
+
+extension URL {
+    fileprivate func numbered(_ index: Int) -> URL {
+        let ext = pathExtension
+        let base = deletingPathExtension().path
+        return URL(fileURLWithPath: "\(base)-\(index).\(ext)")
+    }
 }

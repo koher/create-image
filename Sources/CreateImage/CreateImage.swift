@@ -151,13 +151,13 @@ struct CreateImage: AsyncParsableCommand {
             sourceImage: sourceImageData,
             maxRetries: retry
         )
-        try await sendMessage(request, on: connection)
+        try await connection.sendMessage(request)
         logger.info("Sent request")
 
         // 6. Receive response (with timeout)
         let response: ImageResponse = try await withThrowingTaskGroup(of: ImageResponse.self) { group in
             group.addTask {
-                try await receiveMessage(from: connection)
+                try await connection.receiveMessage()
             }
             group.addTask {
                 let remaining = deadline.timeIntervalSinceNow
