@@ -35,7 +35,8 @@ let package = Package(
         ),
         .testTarget(
             name: "CreateImageLauncherTests",
-            dependencies: ["CreateImageLauncher", "CreateImageLogics"]
+            dependencies: ["CreateImageLauncher", "CreateImageLogics"],
+            resources: [.copy("Resources/HumanFace.jpg")]
         ),
     ]
 )

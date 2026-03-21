@@ -136,6 +136,39 @@ struct ImageLauncherTests {
         #expect(FileManager.default.fileExists(atPath: outputPath))
     }
 
+    // MARK: - Source image
+
+    @Test func sourceImage() async throws {
+        let imageURL = Bundle.module.url(forResource: "HumanFace", withExtension: "jpg")!
+        let sourceImageData = try Data(contentsOf: imageURL)
+
+        let outputPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-face-\(UUID().uuidString).png")
+            .path
+
+        defer { try? FileManager.default.removeItem(atPath: outputPath) }
+
+        let request = ImageRequest(
+            prompt: "a person walking in a park",
+            output: outputPath,
+            style: "animation",
+            limit: 1,
+            sourceImage: sourceImageData
+        )
+
+        let launcher = ImageLauncher(
+            runnerPath: runnerPath,
+            port: 51574,
+            timeout: 120
+        )
+
+        let response = try await launcher.run(request: request)
+
+        #expect(response.success)
+        #expect(response.error == nil)
+        #expect(FileManager.default.fileExists(atPath: outputPath))
+    }
+
     // MARK: - Timeout
 
     @Test func timeoutOnInvalidRunner() async throws {
