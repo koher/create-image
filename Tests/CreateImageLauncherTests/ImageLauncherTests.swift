@@ -149,9 +149,15 @@ struct ImageLauncherTests {
             timeout: 120
         )
 
+        let outputPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-invalid-\(UUID().uuidString).png")
+            .path
+
+        defer { try? FileManager.default.removeItem(atPath: outputPath) }
+
         let request = ImageRequest(
             prompt: "anything",
-            output: "/tmp/unused.png",
+            output: outputPath,
             style: "animation",
             limit: 1
         )
