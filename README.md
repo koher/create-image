@@ -57,6 +57,14 @@ swift run create-image --format jpg --quality 0.8 -o cat.jpg "a cat"
 swift run create-image --source-image face.jpg "a person walking in the park"
 ```
 
+## Responsible Use
+
+Please use this tool in compliance with applicable law, third-party rights, and Apple's applicable terms for Xcode, SDKs, and related services. You are responsible for reviewing prompts, inputs, outputs, and any generated content before using or distributing them.
+
+In particular, users should ensure that their use does not infringe copyrights, trademarks, rights of privacy/publicity, or other rights of third parties, and that any required attribution or disclosure is provided where applicable.
+
+This project is provided "as is", without warranty of any kind. See the LICENSE file for details.
+
 ## Test resources
 
 `Tests/CreateImageCoreTests/Resources/HumanFace.jpg` is an AI-generated image and does not depict any real person.
