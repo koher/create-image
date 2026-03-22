@@ -8,6 +8,16 @@ A command-line tool that generates images using Apple's [ImageCreator](https://d
 - Apple Silicon Mac with Apple Intelligence enabled
 - Swift 6.2+
 
+## Setup
+
+This tool uses Image Playground, which requires Apple Intelligence. To enable it:
+
+1. Open **System Settings** > **Apple Intelligence & Siri**
+2. Turn on **Apple Intelligence**
+3. Wait for on-device models to finish downloading (keep your Mac connected to Wi-Fi and power)
+
+Apple Intelligence is not available on all Mac models or in all languages or regions. See [How to get Apple Intelligence](https://support.apple.com/en-us/121115) for details.
+
 ## Usage
 
 ```bash
