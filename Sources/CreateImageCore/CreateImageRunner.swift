@@ -54,7 +54,7 @@ public struct CreateImageRunner: Sendable {
                             at: dir, withIntermediateDirectories: true
                         )
 
-                        try created.cgImage.savePNG(to: path)
+                        try created.cgImage.save(to: path, format: request.format, quality: request.quality)
                         logger.info("Saved image \(index): \(path, privacy: .public)")
                     }
 
@@ -74,20 +74,38 @@ public struct CreateImageRunner: Sendable {
     }
 }
 
-// MARK: - CGImage + PNG
+// MARK: - CGImage + Save
 
 private enum ImageSaveError: LocalizedError {
-    case pngConversionFailed
-    var errorDescription: String? { "Failed to convert image to PNG format" }
+    case conversionFailed(OutputFormat)
+    var errorDescription: String? {
+        switch self {
+        case .conversionFailed(let format):
+            "Failed to convert image to \(format.rawValue.uppercased()) format"
+        }
+    }
 }
 
 extension CGImage {
-    fileprivate func savePNG(to path: String) throws {
+    fileprivate func save(to path: String, format: OutputFormat, quality: Double?) throws {
         let bitmap = NSBitmapImageRep(cgImage: self)
-        guard let pngData = bitmap.representation(using: .png, properties: [:]) else {
-            throw ImageSaveError.pngConversionFailed
+        let fileType: NSBitmapImageRep.FileType
+        var properties: [NSBitmapImageRep.PropertyKey: Any] = [:]
+
+        switch format {
+        case .png:
+            fileType = .png
+        case .jpg:
+            fileType = .jpeg
+            if let quality {
+                properties[.compressionFactor] = quality
+            }
         }
-        try pngData.write(to: URL(fileURLWithPath: path))
+
+        guard let data = bitmap.representation(using: fileType, properties: properties) else {
+            throw ImageSaveError.conversionFailed(format)
+        }
+        try data.write(to: URL(fileURLWithPath: path))
     }
 }
 

@@ -98,6 +98,67 @@ struct CreateImageRunnerTests {
         #expect(FileManager.default.fileExists(atPath: outputPath))
     }
 
+    // MARK: - Output format
+
+    @Test func jpgOutput() async throws {
+        let outputPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-jpg-\(UUID().uuidString).jpg")
+            .path
+
+        defer { try? FileManager.default.removeItem(atPath: outputPath) }
+
+        let request = ImageRequest(
+            prompt: "a blue sky",
+            output: outputPath,
+            style: "animation",
+            limit: 1,
+            format: .jpg,
+            quality: 0.8
+        )
+
+        let runner = CreateImageRunner()
+        let response = try await runner.run(request: request)
+
+        guard case .success = response else {
+            Issue.record("Expected success, got \(response)")
+            return
+        }
+        #expect(FileManager.default.fileExists(atPath: outputPath))
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: outputPath))
+        // JPEG files start with FF D8
+        #expect(data[0] == 0xFF && data[1] == 0xD8)
+    }
+
+    @Test func pngOutput() async throws {
+        let outputPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-png-\(UUID().uuidString).png")
+            .path
+
+        defer { try? FileManager.default.removeItem(atPath: outputPath) }
+
+        let request = ImageRequest(
+            prompt: "a blue sky",
+            output: outputPath,
+            style: "animation",
+            limit: 1,
+            format: .png
+        )
+
+        let runner = CreateImageRunner()
+        let response = try await runner.run(request: request)
+
+        guard case .success = response else {
+            Issue.record("Expected success, got \(response)")
+            return
+        }
+        #expect(FileManager.default.fileExists(atPath: outputPath))
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: outputPath))
+        // PNG files start with 89 50 4E 47
+        #expect(data[0] == 0x89 && data[1] == 0x50)
+    }
+
     // MARK: - Source image
 
     @Test func sourceImage() async throws {

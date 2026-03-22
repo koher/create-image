@@ -27,6 +27,20 @@ struct CreateImage: AsyncParsableCommand {
     @Option(help: "Max retries on image generation failure")
     var retry: Int = 3
 
+    @Option(name: [.short, .long], help: "Output format (png, jpg)")
+    var format: OutputFormat = .png
+
+    @Option(help: "JPEG quality (0.0-1.0, only used with --format jpg)")
+    var quality: Double?
+
+    func validate() throws {
+        if let quality {
+            guard quality >= 0 && quality <= 1 else {
+                throw ValidationError("--quality must be between 0.0 and 1.0")
+            }
+        }
+    }
+
     func run() async throws {
         let outputPath = URL(fileURLWithPath: output).path
         let sourceImageData: Data?
@@ -42,11 +56,13 @@ struct CreateImage: AsyncParsableCommand {
             style: style,
             limit: limit,
             sourceImage: sourceImageData,
-            maxRetries: retry
+            maxRetries: retry,
+            format: format,
+            quality: quality
         )
 
-        let launcher = CreateImageRunner()
-        switch try await launcher.run(request: request) {
+        let runner = CreateImageRunner()
+        switch try await runner.run(request: request) {
         case .success(let output):
             print("Saved: \(output)")
         case .failure(let error):
@@ -54,3 +70,5 @@ struct CreateImage: AsyncParsableCommand {
         }
     }
 }
+
+extension OutputFormat: ExpressibleByArgument {}
