@@ -42,10 +42,6 @@ swift run create-image --limit 3 -o sunset.png "a sunset"
 swift run create-image --source-image face.jpg "a person walking in the park"
 ```
 
-## How it works
-
-`ImageCreator` is called directly from the CLI process. No separate app or process is needed.
-
 ## Test resources
 
-`Tests/CreateImageLauncherTests/Resources/HumanFace.jpg` is an AI-generated image and does not depict any real person.
+`Tests/CreateImageCoreTests/Resources/HumanFace.jpg` is an AI-generated image and does not depict any real person.
