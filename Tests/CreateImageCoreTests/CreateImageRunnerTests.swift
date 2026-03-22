@@ -16,7 +16,7 @@ struct CreateImageRunnerTests {
 
         defer { try? FileManager.default.removeItem(atPath: outputPath) }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: "a blue sky with clouds",
             output: outputPath,
             style: style,
@@ -51,7 +51,7 @@ struct CreateImageRunnerTests {
             }
         }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: "a simple star",
             output: outputPath,
             style: "animation",
@@ -81,7 +81,7 @@ struct CreateImageRunnerTests {
 
         defer { try? FileManager.default.removeItem(at: baseDir) }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: "a green tree",
             output: outputPath,
             style: "animation",
@@ -107,7 +107,7 @@ struct CreateImageRunnerTests {
 
         defer { try? FileManager.default.removeItem(atPath: outputPath) }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: "a blue sky",
             output: outputPath,
             style: "animation",
@@ -137,7 +137,7 @@ struct CreateImageRunnerTests {
 
         defer { try? FileManager.default.removeItem(atPath: outputPath) }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: "a blue sky",
             output: outputPath,
             style: "animation",
@@ -159,6 +159,51 @@ struct CreateImageRunnerTests {
         #expect(data[0] == 0x89 && data[1] == 0x50)
     }
 
+    // MARK: - Quality validation
+
+    @Test func qualityOutOfRange() {
+        #expect(throws: ImageRequestError.self) {
+            try ImageRequest(
+                prompt: "test", output: "/tmp/test.jpg", style: "animation",
+                limit: 1, format: .jpg, quality: 1.5
+            )
+        }
+    }
+
+    @Test func qualityNegative() {
+        #expect(throws: ImageRequestError.self) {
+            try ImageRequest(
+                prompt: "test", output: "/tmp/test.jpg", style: "animation",
+                limit: 1, format: .jpg, quality: -0.1
+            )
+        }
+    }
+
+    @Test func qualityWithPng() {
+        #expect(throws: ImageRequestError.self) {
+            try ImageRequest(
+                prompt: "test", output: "/tmp/test.png", style: "animation",
+                limit: 1, format: .png, quality: 0.5
+            )
+        }
+    }
+
+    @Test func qualityValidRange() throws {
+        let request = try ImageRequest(
+            prompt: "test", output: "/tmp/test.jpg", style: "animation",
+            limit: 1, format: .jpg, quality: 0.5
+        )
+        #expect(request.quality == 0.5)
+    }
+
+    @Test func qualityOmittedForJpg() throws {
+        let request = try ImageRequest(
+            prompt: "test", output: "/tmp/test.jpg", style: "animation",
+            limit: 1, format: .jpg
+        )
+        #expect(request.quality == nil)
+    }
+
     // MARK: - Source image
 
     @Test func sourceImage() async throws {
@@ -171,7 +216,7 @@ struct CreateImageRunnerTests {
 
         defer { try? FileManager.default.removeItem(atPath: outputPath) }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: "a person walking in a park",
             output: outputPath,
             style: "animation",

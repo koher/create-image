@@ -33,14 +33,6 @@ struct CreateImage: AsyncParsableCommand {
     @Option(help: "JPEG quality (0.0-1.0, only used with --format jpg)")
     var quality: Double?
 
-    func validate() throws {
-        if let quality {
-            guard quality >= 0 && quality <= 1 else {
-                throw ValidationError("--quality must be between 0.0 and 1.0")
-            }
-        }
-    }
-
     func run() async throws {
         let outputPath = URL(fileURLWithPath: output).path
         let sourceImageData: Data?
@@ -50,7 +42,7 @@ struct CreateImage: AsyncParsableCommand {
             sourceImageData = nil
         }
 
-        let request = ImageRequest(
+        let request = try ImageRequest(
             prompt: prompt,
             output: outputPath,
             style: style,
